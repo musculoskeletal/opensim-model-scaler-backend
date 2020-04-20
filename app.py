@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from flask import send_from_directory
 import pprint
 
-UPLOAD_FOLDER = r'C:\Users\mkeo2\Desktop\MapClient\wrcs'
+UPLOAD_FOLDER = r'C:\Users\mkeo2\Desktop\final\server'
 ALLOWED_EXTENSIONS = {'trc'}
 
 app = Flask(__name__)
