@@ -1,4 +1,6 @@
 import os
+from os.path import isfile, join
+import csv
 import glob
 import json
 from flask import Flask, flash, request, redirect, url_for, jsonify
@@ -58,3 +60,77 @@ def returnMarkerSet():
     metaData = lis[3]
     metaData = metaData[2:]
     return jsonify({'markers': metaData})
+
+@app.route('/markers', methods=["POST"])
+def markers():
+    markers = request.form.getlist('data[]')
+    wd = os.getcwd() + '\\official'
+    fileList = os.listdir(wd)
+    key = 0
+    if len(fileList) == 0:
+        with open(wd + '\\' + "1.csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(markers)
+            key = 1
+    else:
+        keyList = []
+        for marker in fileList:
+            keyList.append(marker.replace('.csv', ''))
+        keyList = list(map(int, keyList))
+        key = max(keyList) + 1
+        print(wd + '\\' + str(key)+ ".csv")
+        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(markers)
+    return jsonify({'markers': markers})
+
+@app.route('/unselected', methods=['POST'])
+def unselected():
+    unselected = request.form.getlist('data[]')
+    wd = os.getcwd() + '\\unofficial'
+    fileList = os.listdir(wd)
+    key = 0
+    if len(fileList) == 0:
+        with open(wd + '\\' + "1.csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(unselected)
+            key = 1
+    else:
+        keyList = []
+        for marker in fileList:
+            keyList.append(marker.replace('.csv', ''))
+        keyList = list(map(int, keyList))
+        key = max(keyList) + 1
+        print(wd + '\\' + str(key)+ ".csv")
+        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(unselected)
+            
+    response = jsonify()
+    response.status_code = 201
+    response.headers['location'] = '/unselected/' + str(key)
+    response.autocorrect_location_header = False
+    return response
+
+@app.route('/tracking', methods=['POST'])
+def tracking():
+    tracking = request.form.getlist('data[]')
+    wd = os.getcwd() + '\\tracking'
+    fileList = os.listdir(wd)
+    key = 0
+    if len(fileList) == 0:
+        with open(wd + '\\' + "1.csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(tracking)
+            key = 1
+    else:
+        keyList = []
+        for marker in fileList:
+            keyList.append(marker.replace('.csv', ''))
+        keyList = list(map(int, keyList))
+        key = max(keyList) + 1
+        print(wd + '\\' + str(key)+ ".csv")
+        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(tracking)
+    return jsonify('1')
