@@ -3,7 +3,7 @@ from os.path import isfile, join
 import csv
 import glob
 import json
-from flask import Flask, flash, request, redirect, url_for, jsonify
+from flask import Flask, flash, request, redirect, url_for, jsonify, Response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
@@ -15,8 +15,10 @@ ALLOWED_EXTENSIONS = {'trc'}
 DEFAULT_PATH = os.getcwd()
 
 app = Flask(__name__)
-CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['CORS_HEADERS'] = 'Content-Type'
+app.secret_key = 'gf3r0199truelfkjlk'
+CORS(app)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -29,21 +31,26 @@ def uploaded_file(filename):
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
-    # check if the post request has the file part
-    if 'file' not in request.files:
+    if request.data == '':
         flash('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    # if user does not select file, browser also
+        return Response("{'message': 'No File Uploaded'}", status=400, mimetype='application/json')
+
+    content = request.get_json()
+    fileName = content["fileName"]
+    fileContent = content["fileContent"]    # if user does not select file, browser also
     # submit an empty part without filename
-    if file.filename == '':
+    if fileName == '':
         flash('No selected file')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('uploaded_file',
-                                filename=filename))
+        return Response("{'message': 'Invalid File Name'}", status=400, mimetype='application/json')
+    if fileContent and allowed_file(fileName):
+        filename = secure_filename(fileName)
+        completeName = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        newFile = open(completeName, "w")
+        newFile.write(fileContent)
+        newFile.close()
+        allowedResponse = Response("", status=201, mimetype='application/json')
+        allowedResponse.location = url_for('uploaded_file', filename=filename)
+        return allowedResponse
 
 @app.route('/get', methods=['GET'])
 def returnMarkerSet():
