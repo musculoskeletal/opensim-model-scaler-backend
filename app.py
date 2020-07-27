@@ -60,9 +60,9 @@ def returnMarkerSet():
         trcFiles.append(file)
     for trc in trcFiles:
         with open(trc) as f:
-            lis = [line.split() for line in f]       
-    metaData = lis[3]
-    metaData = metaData[2:]    
+            lis = [line.split() for line in f]   
+    metaData = lis[6]
+    metaData = metaData[2:]
     return jsonify({'markers': metaData})
 
 @app.route('/markers', methods=["POST"])
