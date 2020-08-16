@@ -1,20 +1,19 @@
 import os
-from os.path import isfile, join
 import csv
 import glob
-import json
 from flask import Flask, flash, request, redirect, url_for, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from flask import send_from_directory
-import pprint
 
-UPLOAD_FOLDER = r'/Users/hsor001/Projects/musculoskeletal/upload_dir'
+from config import Config
+
+
 ALLOWED_EXTENSIONS = {'trc'}
 
 app = Flask(__name__)
 CORS(app)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = Config.UPLOAD_DIR
 
 
 def allowed_file(filename):
@@ -49,62 +48,59 @@ def upload_file():
 
 @app.route('/get', methods=['GET'])
 def returnMarkerSet():
-    path = os.getcwd()
-    path = path + "\\"
-    trcFiles = []
+    trc_files = []
     for file in glob.glob("*.trc"):
-        trcFiles.append(file)
-    for trc in trcFiles:
+        trc_files.append(file)
+    for trc in trc_files:
         with open(trc) as f:
             lis = [line.split() for line in f]        # create a list of lists
-    metaData = lis[3]
-    metaData = metaData[2:]
-    return jsonify({'markers': metaData})
+    meta_data = lis[3]
+    meta_data = meta_data[2:]
+    return jsonify({'markers': meta_data})
+
 
 @app.route('/markers', methods=["POST"])
 def markers():
-    markers = request.form.getlist('data[]')
+    markers_data = request.form.getlist('data[]')
     wd = os.getcwd() + '\\official'
-    fileList = os.listdir(wd)
-    key = 0
-    if len(fileList) == 0:
+    file_list = os.listdir(wd)
+    if len(file_list) == 0:
         with open(wd + '\\' + "1.csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(markers)
-            key = 1
+            writer.writerows(markers_data)
     else:
-        keyList = []
-        for marker in fileList:
-            keyList.append(marker.replace('.csv', ''))
-        keyList = list(map(int, keyList))
-        key = max(keyList) + 1
-        print(wd + '\\' + str(key)+ ".csv")
-        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+        key_list = []
+        for marker in file_list:
+            key_list.append(marker.replace('.csv', ''))
+        key_list = list(map(int, key_list))
+        key = max(key_list) + 1
+        print(wd + '\\' + str(key) + ".csv")
+        with open(wd + '\\' + str(key) + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(markers)
-    return jsonify({'markers': markers})
+            writer.writerows(markers_data)
+    return jsonify({'markers': markers_data})
+
 
 @app.route('/unselected', methods=['POST'])
 def unselected():
-    unselected = request.form.getlist('data[]')
+    unselected_data = request.form.getlist('data[]')
     wd = os.getcwd() + '\\unofficial'
-    fileList = os.listdir(wd)
-    key = 0
-    if len(fileList) == 0:
+    file_list = os.listdir(wd)
+    if len(file_list) == 0:
         with open(wd + '\\' + "1.csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(unselected)
+            writer.writerows(unselected_data)
             key = 1
     else:
-        keyList = []
-        for marker in fileList:
-            keyList.append(marker.replace('.csv', ''))
-        keyList = list(map(int, keyList))
-        key = max(keyList) + 1
-        print(wd + '\\' + str(key)+ ".csv")
-        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+        key_list = []
+        for marker in file_list:
+            key_list.append(marker.replace('.csv', ''))
+        key_list = list(map(int, key_list))
+        key = max(key_list) + 1
+        print(wd + '\\' + str(key) + ".csv")
+        with open(wd + '\\' + str(key) + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(unselected)
+            writer.writerows(unselected_data)
             
     response = jsonify()
     response.status_code = 201
@@ -112,25 +108,24 @@ def unselected():
     response.autocorrect_location_header = False
     return response
 
+
 @app.route('/tracking', methods=['POST'])
 def tracking():
-    tracking = request.form.getlist('data[]')
+    tracking_data = request.form.getlist('data[]')
     wd = os.getcwd() + '\\tracking'
-    fileList = os.listdir(wd)
-    key = 0
-    if len(fileList) == 0:
+    file_list = os.listdir(wd)
+    if len(file_list) == 0:
         with open(wd + '\\' + "1.csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(tracking)
-            key = 1
+            writer.writerows(tracking_data)
     else:
-        keyList = []
-        for marker in fileList:
-            keyList.append(marker.replace('.csv', ''))
-        keyList = list(map(int, keyList))
-        key = max(keyList) + 1
-        print(wd + '\\' + str(key)+ ".csv")
-        with open(wd + '\\' + str(key)+ ".csv", "w", newline="") as f:
+        key_list = []
+        for marker in file_list:
+            key_list.append(marker.replace('.csv', ''))
+        key_list = list(map(int, key_list))
+        key = max(key_list) + 1
+        print(wd + '\\' + str(key) + ".csv")
+        with open(wd + '\\' + str(key) + ".csv", "w", newline="") as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerows(tracking)
+            writer.writerows(tracking_data)
     return jsonify('1')
