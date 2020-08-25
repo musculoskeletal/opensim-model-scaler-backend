@@ -1,2 +1,3 @@
 trc-data-reader
 pandas
+Flask-SQLAlchemy
