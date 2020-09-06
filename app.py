@@ -40,15 +40,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.data == '':
-        return Response("{message: 'No File Uploaded'}", status=400, mimetype='application/json')
-
-    content = request.get_json()
-    file_name = content["fileName"]
-    file_content = content["fileContent"]  # if user does not select file, browser also
-    # submit an empty part without filename
+def store_in_database(file_name, file_content):
     if file_name == '':
         return Response(f"{{message: 'Invalid file name', file_name: '{file_name}'}}",
                         status=400, mimetype='application/json')
@@ -86,6 +78,19 @@ def upload_file():
 
     return Response(f"{{message: 'Invalid file content', file_name: '{file_name}'}}",
                     status=400, mimetype='application/json')
+
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    response = Response("{message: 'File upload error'}", status=400, mimetype='application/json')
+    content = request.files.to_dict()
+    if len(content) == 1 and 'file' in content:
+        file_uploaded = content['file']
+        file_name = file_uploaded.filename
+        file_content = file_uploaded.read().decode('utf8')
+        response = store_in_database(file_name, file_content)
+
+    return response
 
 
 @app.route('/create/demographic', methods=['POST'])
