@@ -10,7 +10,11 @@ from flask_sqlalchemy import SQLAlchemy
 from db_common import engine, GenderEnum
 from db_prepare import db_session
 from db_setup import init_db
-from db_tables import Demographic, MotionCaptureData, MotionCaptureMetaData
+from db_tables import Conversion, Demographic, FileConversionAssociation,\
+    MarkerMap, MotionCaptureData, MotionCaptureMetaData
+from db_queries import marker_mapping_exists, conversion_id, marker_map_id, motion_capture_data_id, conversion_exists, \
+    file_conversion_association_exists, conversions_associated_with
+from db_upgrade import need_upgrade, upgrade
 
 from config import Config
 from trc import TRCData
@@ -28,6 +32,9 @@ db = SQLAlchemy(app)
 
 if not os.path.exists(Config.DATABASE_FILE):
     init_db()
+
+if need_upgrade():
+    upgrade()
 
 
 @app.teardown_appcontext
@@ -93,6 +100,35 @@ def upload_file():
     return response
 
 
+@app.route('/create/conversion', methods=['POST'])
+def create_conversion():
+    content = request.get_json()
+    for marker_mapping in content['marker_maps']:
+        if not marker_mapping_exists(marker_mapping):
+            db_session.add(MarkerMap(marker_mapping['source'], marker_mapping['target']))
+
+    db_session.commit()
+
+    ids = []
+    for marker_mapping in content['marker_maps']:
+        ids.append(str(marker_map_id(marker_mapping)))
+
+    marker_map_ids = ','.join(ids)
+    if not conversion_exists(content['name'], marker_map_ids):
+        db_session.add(Conversion(content['name'], marker_map_ids))
+        db_session.commit()
+
+    id_for_conversion = conversion_id(content['name'], marker_map_ids)
+
+    trc_id = motion_capture_data_id(content['file'])
+    if not file_conversion_association_exists(id_for_conversion, trc_id):
+        fca = FileConversionAssociation(id_for_conversion, trc_id)
+        db_session.add(fca)
+        db_session.commit()
+
+    return jsonify({'id': content['name'], 'public': True})
+
+
 @app.route('/create/demographic', methods=['POST'])
 def create_demographic():
     content = request.get_json()
@@ -116,6 +152,18 @@ def get_available_demographics():
     query_result = Demographic.query.filter(Demographic.public)
     demographics = [{'id': r.demographic_id} for r in query_result]
     return jsonify({'demographics': demographics})
+
+
+@app.route('/conversions', methods=['GET'])
+def get_available_conversions():
+    title = request.args.get('title', None)
+    hash_ = request.args.get('hash', None)
+    conversions = []
+    if title is not None and hash_ is not None:
+        query_result = conversions_associated_with(title, hash_)
+        conversions = [{"id": o.id, "name": o.name} for o in query_result]
+
+    return jsonify({'conversions': conversions})
 
 
 @app.route('/markers/<string:hash_>', methods=["GET"])

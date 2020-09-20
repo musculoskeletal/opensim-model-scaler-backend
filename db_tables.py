@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship, backref
 from db_prepare import Base
 from db_common import GenderEnum
 
+__version__ = "0.1.0"
+
 
 class Demographic(Base):
     __tablename__ = "demographics"
@@ -107,3 +109,65 @@ class DemographicMotionCaptureData(Base):
 
     def __repr__(self):
         return f"<ParticipantMotionCaptureData: {self.participant_id} - {self.trc_id}>"
+
+
+# Added in version 0.1.0
+class Version(Base):
+    __tablename__ = "versions"
+
+    id = Column(Integer, primary_key=True)
+    version = Column(String)
+
+    def __init__(self, version):
+        self.version = version
+
+    def __repr__(self):
+        return f"<Version: {self.version}>"
+
+
+class MarkerMap(Base):
+    __tablename__ = "marker_map"
+
+    id = Column(Integer, primary_key=True)
+    source = Column(String)
+    target = Column(String)
+
+    def __init__(self, source, target):
+        """"""
+        self.source = source
+        self.target = target
+
+    def __repr__(self):
+        return f"<Marker Map: '{self.source}' - '{self.target}'>"
+
+
+class Conversion(Base):
+    __tablename__ = "conversions"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    marker_map_ids = Column(String)
+
+    def __init__(self, name, marker_map_ids):
+        """"""
+        self.name = name
+        self.marker_map_ids = marker_map_ids
+
+    def __repr__(self):
+        return f"<Conversion: '{self.name}' - '{self.marker_map_ids}>'"
+
+
+class FileConversionAssociation(Base):
+    __tablename__ = "file_conversion_associations"
+
+    id = Column(Integer, primary_key=True)
+    conversion_id = Column(Integer, ForeignKey("conversions.id"))
+    trc_id = Column(Integer, ForeignKey("motion_capture_data.id"))
+
+    def __init__(self, conversion_id, trc_id):
+        """"""
+        self.conversion_id = conversion_id
+        self.trc_id = trc_id
+
+    def __repr__(self):
+        return f"<File Conversion Association: '{self.conversion_id}' - '{self.trc_id}'>"

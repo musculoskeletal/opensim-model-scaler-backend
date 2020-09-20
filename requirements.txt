@@ -1,3 +1,5 @@
 trc-data-reader
 pandas
 Flask-SQLAlchemy
+packaging
+natsort
