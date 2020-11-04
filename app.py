@@ -8,16 +8,19 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
 from db_common import engine, GenderEnum
-from db_prepare import db_session
+from db_prepare import db_session, table
 from db_setup import init_db
-from db_tables import Conversion, Demographic, FileConversionAssociation,\
+from db_tables import Conversion, Demographic, FileConversionAssociation, \
     MarkerMap, MotionCaptureData, MotionCaptureMetaData
 from db_queries import marker_mapping_exists, conversion_id, marker_map_id, motion_capture_data_id, conversion_exists, \
-    file_conversion_association_exists, conversions_associated_with
+    file_conversion_association_exists, conversions_associated_with, marker_map
+from db_queries import markers as get_markers
 from db_upgrade import need_upgrade, upgrade
 
 from config import Config
 from trc import TRCData
+
+from backend.trcframe.trcframeselector import trc_frame_select
 
 ALLOWED_EXTENSIONS = {'trc'}
 
@@ -168,17 +171,80 @@ def get_available_conversions():
 
 @app.route('/markers/<string:hash_>', methods=["GET"])
 def markers(hash_):
-    query_result = MotionCaptureMetaData.query.\
-        with_entities(MotionCaptureMetaData.markers).\
-        filter(MotionCaptureMetaData.hash == hash_).\
-        first()
-    markers_data = query_result[0].split('<sep>')
-    return jsonify({'markers': markers_data})
+    return jsonify({'markers': get_markers(hash_)})
+
+
+def process_trc_db_data(db_data, markers_):
+    index = getattr(db_data, 'Frame#')
+    time_ = getattr(db_data, 'Time')
+    coordinates = []
+    data_dict = {'Frame#': index, 'Time': time_}
+    for marker in markers_:
+        parts = getattr(db_data, marker).split('<sep>')
+        data_dict[marker] = [float(p) for p in parts]
+
+    return data_dict
 
 
 @app.route('/process', methods=["POST"])
 def run_calculations():
     data = request.get_json()
-    # print(data)
+    print(data)
+    print(data['id'])
+    print(data['file'])
+    print(data['demographic'])
+    print(data['essentialMarkers'])
+    print(data['trackingMarkers'])
+    # query_result = MotionCaptureData.query.filter(MotionCaptureData.hash == data['file']['hash'])
+
+    # print(query_result)
+    data_table = table(data['file']['hash'])
+    # target_data = TRCData()
+    # target_data.load('/Users/hsor001/Projects/musculoskeletal/dump/test_file_04.trc')
+    # print(target_data)
+    markers_ = get_markers(data['file']['hash'])
+
+    query_result = Conversion.query.with_entities(Conversion.marker_map_ids).filter(Conversion.name == "unknown").first()
+    marker_map_ids = query_result.marker_map_ids
+    ids = marker_map_ids.split(',')
+    mapping = [marker_map(int(id_)) for id_ in ids]
+    landmarks = {}
+    for map_ in mapping:
+        landmarks[map_[0]] = map_[1]
+
+    trc_db_data = db_session.query(data_table).all()
+    trc_data = {}
+    for frame in [process_trc_db_data(o, markers_) for o in trc_db_data]:
+        marker_coordinates = [None] * len(markers_)
+        for key in frame:
+            if key in markers_:
+                index = markers_.index(key)
+                marker_coordinates[index] = frame[key]
+
+            if key in trc_data:
+                trc_data[key].append(frame[key])
+            else:
+                trc_data[key] = [frame[key]]
+
+        trc_data[frame['Frame#']] = (frame['Time'], marker_coordinates)
+
+    trc_data['Markers'] = markers_
+    osim_out_dir = os.environ['OSIM_OUTPUT_DIR']
+    generation_config = {'identifier': '', 'GUI': False, 'registration_mode': 'shapemodel', 'pcs_to_fit': '1',
+                         'mweight': '0.1',
+                         'knee_corr': False, 'knee_dof': True, 'marker_radius': '5.0', 'skin_pad': '5.0',
+                         'landmarks': landmarks}
+
+    geometry_config = {'identifier': '', 'GUI': False, 'scale_other_bodies': True, 'in_unit': 'mm', 'out_unit': 'm',
+                       'osim_output_dir': osim_out_dir,
+                       'write_osim_file': True, 'subject_mass': None, 'preserve_mass_distribution': False,
+                       'adj_marker_pairs': {}}
+
+    muscle_config = {'osim_output_dir': osim_out_dir, 'in_unit': 'cm',
+                     'out_unit': 'm', 'write_osim_file': True, 'update_knee_splines': False, 'static_vas': False,
+                     'update_max_iso_forces': True, 'subject_height': '169', 'subject_mass': '56'}
+
+    trc_frame = trc_frame_select(trc_data, 3)
+    model.main(trc_frame, generation_config, geometry_config, muscle_config)
     time.sleep(5)
     return jsonify({'message': 'Data processed successfully.', 'id': data['id']})

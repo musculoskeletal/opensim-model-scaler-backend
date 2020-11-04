@@ -28,3 +28,7 @@ class GenderEnum(enum.Enum):
 
 
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, convert_unicode=True)
+
+
+def tables():
+    return engine.table_names()

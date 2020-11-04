@@ -154,7 +154,7 @@ class Conversion(Base):
         self.marker_map_ids = marker_map_ids
 
     def __repr__(self):
-        return f"<Conversion: '{self.name}' - '{self.marker_map_ids}>'"
+        return f"<Conversion: '{self.name}' - '{self.marker_map_ids}'>"
 
 
 class FileConversionAssociation(Base):

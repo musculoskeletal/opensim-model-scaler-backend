@@ -2,7 +2,7 @@
 from sqlalchemy.sql import exists, and_
 
 from db_prepare import db_session
-from db_tables import MarkerMap, Conversion, MotionCaptureData, FileConversionAssociation
+from db_tables import MarkerMap, Conversion, MotionCaptureData, FileConversionAssociation, MotionCaptureMetaData
 
 
 def marker_mapping_exists(marker_mapping):
@@ -37,6 +37,14 @@ def marker_map_id(marker_mapping):
     return result[0] if result else -1
 
 
+def marker_map(id_):
+    result = db_session.query(MarkerMap.target, MarkerMap.source).filter(MarkerMap.id == id_).first()
+
+    print("full")
+    print(result)
+    return [result.target, result.source] if result else None
+
+
 def motion_capture_data_id(file_info):
     result = db_session.query(MotionCaptureData.id).filter(and_(MotionCaptureData.title == file_info['title'],
                                                                 MotionCaptureData.hash == file_info['hash'])).first()
@@ -55,3 +63,12 @@ def conversions_associated_with(title, hash_):
         conversions = db_session.query(Conversion).filter(Conversion.id.in_(conversion_ids)).all()
 
     return conversions
+
+
+def markers(hash_):
+    query_result = MotionCaptureMetaData.query.\
+            with_entities(MotionCaptureMetaData.markers).\
+            filter(MotionCaptureMetaData.hash == hash_).\
+            first()
+    markers_data = query_result[0].split('<sep>')
+    return markers_data
