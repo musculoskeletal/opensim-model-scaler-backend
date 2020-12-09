@@ -1,11 +1,14 @@
 import os
 import time
 import hashlib
+import threading
 import pandas as pd
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+
+from config import Config
 
 from db_common import engine, GenderEnum
 from db_prepare import db_session, table
@@ -17,7 +20,6 @@ from db_queries import marker_mapping_exists, conversion_id, marker_map_id, moti
 from db_queries import markers as get_markers
 from db_upgrade import need_upgrade, upgrade
 
-from config import Config
 from trc import TRCData
 
 from backend.trcframe.trcframeselector import trc_frame_select
@@ -34,7 +36,9 @@ CORS(app)
 db = SQLAlchemy(app)
 
 if not os.path.exists(Config.DATABASE_FILE):
-    init_db()
+    lock = threading.Lock()
+    with lock:
+        init_db()
 
 if need_upgrade():
     upgrade()
