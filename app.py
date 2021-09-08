@@ -27,7 +27,7 @@ from backend.trcframe.trcframeselector import trc_frame_select
 ALLOWED_EXTENSIONS = {'trc'}
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = Config.UPLOAD_DIR
+app.config['WORK_DIR'] = Config.WORK_DIR
 app.config['SQLALCHEMY_DATABASE_URI'] = Config.SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -199,6 +199,11 @@ def run_calculations():
     print(data['demographic'])
     print(data['essentialMarkers'])
     print(data['trackingMarkers'])
+    print(app.config['WORK_DIR'])
+    if not os.path.exists(app.config['WORK_DIR']):
+        return Response(f"{{message: 'Invalid server setup', directory does not exist: '{app.config['WORK_DIR']}'}}",
+                        status=400, mimetype='application/json')
+
     # query_result = MotionCaptureData.query.filter(MotionCaptureData.hash == data['file']['hash'])
 
     # print(query_result)
