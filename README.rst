@@ -27,13 +27,15 @@ But before we do, we need to set some environment variables that the backend req
  OMS_BACKEND_SQL_DATABASE
  OMS_BACKEND_SECRET_KEY
  OMS_WORKFLOW_DIR
- PROCESSING_PYTHON_EXE
+ OMS_PROCESSING_PYTHON_EXE
 
 where:
 
  * OMS_BACKEND_WORK_DIR sets the working directory for running the scaling process.
  * OMS_BACKEND_SQL_DATABASE is the location of the SQL database for the parameters and TRC data.
  * OMS_BACKEND_SECRET_KEY is the secret key.
+ * OMS_WORKFLOW_DIR is the directory of the MAP Client workflow.
+ * OMS_PROCESSING_PYTHON_EXE is the python executable for running the MAP Client workflow.
 
 A convenient way to setup the environment for the server is to create a file called *.env* and define the environment variables with their values.
 In the *.env* file define each environment variable one per line with the format *NAME=VALUE* (no spaces).
