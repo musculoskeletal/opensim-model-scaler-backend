@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, Enum, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, backref
 
-from db_prepare import Base
-from db_common import GenderEnum
+from db.common import GenderEnum
+from db.prepare import Base
 
 __version__ = "0.1.0"
 
@@ -74,7 +74,7 @@ class MotionCaptureMetaData(Base):
 
     def __init__(self, hash_, path_file_type, data_format, original_file_name,
                  data_rate=-1.0, camera_rate=-1.0, num_frames=-1, num_markers=-1, units='',
-                 orig_data_rate=-1.0, orig_data_start_frame=-1, orig_num_frame=-1, markers=''):
+                 orig_data_rate=-1.0, orig_data_start_frame=-1, orig_num_frames=-1, markers=''):
         """"""
         self.hash = hash_
         self.path_file_type = path_file_type
@@ -87,7 +87,7 @@ class MotionCaptureMetaData(Base):
         self.units = units
         self.orig_data_rate = orig_data_rate
         self.orig_data_start_frame = orig_data_start_frame
-        self.orig_num_frame = orig_num_frame
+        self.orig_num_frames = orig_num_frames
         self.markers = markers
 
     def __repr__(self):

@@ -1,8 +1,8 @@
-from db_common import engine
-from db_queries import conversions_associated_with
-from db_tables import Conversion, MarkerMap, FileConversionAssociation, MotionCaptureData
+from db.common import engine
+from db.queries import conversions_associated_with
+from db.tables import Conversion, MarkerMap, FileConversionAssociation, MotionCaptureData
 
-from db_upgrade import need_upgrade, upgrade, _get_version
+from upgrade import need_upgrade, upgrade, _get_version
 
 print('Table names: ', engine.table_names())
 

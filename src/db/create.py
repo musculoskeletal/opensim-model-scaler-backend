@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, Float, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
-from db_common import GenderEnum, engine
+from common import GenderEnum, engine
 
 
 Base = declarative_base()

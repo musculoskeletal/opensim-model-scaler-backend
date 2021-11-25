@@ -4,9 +4,9 @@ import inspect
 from natsort import natsorted
 from packaging import version
 
-from db_common import engine
-from db_prepare import db_session, Base
-from db_tables import __version__, Version, MarkerMap, Conversion, FileConversionAssociation
+from db.common import engine
+from db.prepare import db_session, Base
+from db.tables import __version__, Version, MarkerMap, Conversion, FileConversionAssociation
 
 
 def _get_version():
